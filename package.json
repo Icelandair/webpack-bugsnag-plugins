@@ -1,6 +1,6 @@
 {
   "name": "webpack-bugsnag-plugins",
-  "version": "1.4.2",
+  "version": "1.4.2-ensure-only-upload-once",
   "description": "Webpack plugins for common Bugsnag actions",
   "keywords": [
     "bugsnag",
