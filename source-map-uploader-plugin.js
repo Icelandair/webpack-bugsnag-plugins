@@ -12,7 +12,7 @@ const PUBLIC_PATH_WARN =
   '  or set "publicPath" in BugsnagSourceMapUploaderPlugin constructor.\n\n' +
   '  In some cases, such as in a Node environment, it is safe to ignore this message.\n'
 
-let hasAlreadyUploaded = false
+let hasAlreadyUploaded = {}
 
 class BugsnagSourceMapUploaderPlugin {
   constructor (options) {
@@ -84,17 +84,17 @@ class BugsnagSourceMapUploaderPlugin {
           }
         }).filter(Boolean)
       }
-
-      if (!hasAlreadyUploaded) {
-        hasAlreadyUploaded = true
-        const sourceMaps = stats.chunks.map(chunkToSourceMapDescriptors).reduce((accum, ds) => accum.concat(ds), [])
-        parallel(sourceMaps.map(sm => cb => {
+      const sourceMaps = stats.chunks.map(chunkToSourceMapDescriptors).reduce((accum, ds) => accum.concat(ds), [])
+      parallel(sourceMaps.map(sm => cb => {
+        if (!hasAlreadyUploaded[sm.url]) {
+          hasAlreadyUploaded[sm.url] = true
           console.log(`${LOG_PREFIX} uploading sourcemap for "${sm.url}"`)
           upload(this.getUploadOpts(sm), cb)
-        }), 10, cb)
-      } else {
-        cb();
-      }
+        } else {
+          console.log(`${LOG_PREFIX} has already uploaded sourcemap for "${sm.url}"`)
+          cb()
+        }
+      }), 10, cb)
     }
 
     if (compiler.hooks) {
